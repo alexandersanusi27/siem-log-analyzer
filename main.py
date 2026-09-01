@@ -1,0 +1,205 @@
+#!/usr/bin/env python3
+"""
+SIEM Log Analyzer
+-----------------
+Ingest SSH auth logs, Windows Event Logs (JSON), and Zeek conn logs,
+then detect: brute force, lateral movement, privilege escalation,
+and impossible travel logins.
+
+Usage:
+  python main.py --demo
+  python main.py --ssh sample_logs/auth.log
+  python main.py --ssh sample_logs/auth.log --windows sample_logs/windows_events.json
+  python main.py --ssh sample_logs/auth.log --min-severity HIGH --output json
+"""
+import argparse
+import json
+import sys
+from dataclasses import asdict
+from typing import List
+
+from models import Alert, SEVERITY_ORDER
+
+
+# ---------------------------------------------------------------------------
+# Argument parser
+# ---------------------------------------------------------------------------
+
+def build_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(
+        prog="siem-analyzer",
+        description="Detect security threats in aggregated log files.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__,
+    )
+    p.add_argument("--ssh",     nargs="+", metavar="FILE", help="SSH auth.log file(s)")
+    p.add_argument("--windows", nargs="+", metavar="FILE", help="Windows Event Log JSON file(s)")
+    p.add_argument("--zeek",    nargs="+", metavar="FILE", help="Zeek conn.log file(s)")
+    p.add_argument(
+        "--detectors", nargs="+",
+        choices=["brute_force", "lateral_movement", "privilege_escalation", "impossible_travel"],
+        help="Run only specific detectors (default: all)",
+    )
+    p.add_argument(
+        "--min-severity", choices=["LOW", "MEDIUM", "HIGH", "CRITICAL"],
+        default="LOW", metavar="LEVEL",
+        help="Minimum severity level to display (default: LOW)",
+    )
+    p.add_argument(
+        "--output", choices=["terminal", "json", "csv"],
+        default="terminal",
+        help="Output format (default: terminal)",
+    )
+    p.add_argument(
+        "--demo", action="store_true",
+        help="Run analysis on the bundled sample log files",
+    )
+    return p
+
+
+# ---------------------------------------------------------------------------
+# Log loading
+# ---------------------------------------------------------------------------
+
+def load_events(args):
+    events = []
+    stats  = {}
+
+    if args.ssh:
+        from parsers.ssh import parse_ssh_log
+        for path in args.ssh:
+            evts = parse_ssh_log(path)
+            events.extend(evts)
+            stats["ssh"] = stats.get("ssh", 0) + len(evts)
+            print(f"  [ssh]     {len(evts):>5} events  <- {path}")
+
+    if args.windows:
+        from parsers.windows import parse_windows_log
+        for path in args.windows:
+            evts = parse_windows_log(path)
+            events.extend(evts)
+            stats["windows"] = stats.get("windows", 0) + len(evts)
+            print(f"  [windows] {len(evts):>5} events  <- {path}")
+
+    if args.zeek:
+        from parsers.zeek import parse_zeek_conn_log
+        for path in args.zeek:
+            evts = parse_zeek_conn_log(path)
+            events.extend(evts)
+            stats["zeek"] = stats.get("zeek", 0) + len(evts)
+            print(f"  [zeek]    {len(evts):>5} events  <- {path}")
+
+    return events, stats
+
+
+# ---------------------------------------------------------------------------
+# Detection
+# ---------------------------------------------------------------------------
+
+_DETECTOR_MODULES = {
+    "brute_force":          "detectors.brute_force",
+    "lateral_movement":     "detectors.lateral_movement",
+    "privilege_escalation": "detectors.privilege_escalation",
+    "impossible_travel":    "detectors.impossible_travel",
+}
+
+
+def run_detectors(events, detector_names: List[str]) -> List[Alert]:
+    all_alerts: List[Alert] = []
+
+    for name in detector_names:
+        mod_path = _DETECTOR_MODULES[name]
+        mod = __import__(mod_path, fromlist=["detect"])
+        found = mod.detect(events)
+        label = name.replace("_", " ").title()
+        print(f"  [{label}] {len(found)} alert(s)")
+        all_alerts.extend(found)
+
+    # Sort: highest severity and score first
+    all_alerts.sort(
+        key=lambda a: (SEVERITY_ORDER.get(a.severity, 0), a.score),
+        reverse=True,
+    )
+    return all_alerts
+
+
+# ---------------------------------------------------------------------------
+# Output renderers
+# ---------------------------------------------------------------------------
+
+def output_terminal(alerts: List[Alert], stats: dict) -> None:
+    from dashboard.terminal import render_dashboard
+    render_dashboard(alerts, stats)
+
+
+def output_json(alerts: List[Alert]) -> None:
+    records = []
+    for a in alerts:
+        d = asdict(a)
+        d["first_seen"] = a.first_seen.isoformat()
+        d["last_seen"]  = a.last_seen.isoformat()
+        records.append(d)
+    print(json.dumps(records, indent=2, default=str))
+
+
+def output_csv(alerts: List[Alert]) -> None:
+    import csv
+    writer = csv.writer(sys.stdout)
+    writer.writerow([
+        "Rank", "Severity", "Type", "Score", "Title",
+        "IPs", "Users", "Events", "First Seen", "Last Seen", "MITRE",
+    ])
+    for i, a in enumerate(alerts, 1):
+        writer.writerow([
+            i, a.severity, a.alert_type, a.score, a.title,
+            "|".join(a.involved_ips),
+            "|".join(a.involved_users),
+            a.event_count,
+            a.first_seen.isoformat(),
+            a.last_seen.isoformat(),
+            a.mitre_technique or "",
+        ])
+
+
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
+
+def main() -> None:
+    parser = build_parser()
+    args   = parser.parse_args()
+
+    if args.demo:
+        args.ssh     = ["sample_logs/auth.log"]
+        args.windows = ["sample_logs/windows_events.json"]
+        args.zeek    = ["sample_logs/zeek_conn.log"]
+
+    if not (args.ssh or args.windows or args.zeek):
+        parser.print_help()
+        print("\n  Tip: run with --demo to try the bundled sample logs.")
+        sys.exit(1)
+
+    detectors = args.detectors or list(_DETECTOR_MODULES.keys())
+
+    print("\nLoading logs...")
+    events, stats = load_events(args)
+    print(f"  Total events loaded: {len(events)}\n")
+
+    print("Running detectors...")
+    alerts = run_detectors(events, detectors)
+
+    # Filter by minimum severity
+    min_sev = SEVERITY_ORDER.get(args.min_severity, 0)
+    alerts  = [a for a in alerts if SEVERITY_ORDER.get(a.severity, 0) >= min_sev]
+    print(f"  Alerts after severity filter (>= {args.min_severity}): {len(alerts)}\n")
+
+    if args.output == "terminal":
+        output_terminal(alerts, stats)
+    elif args.output == "json":
+        output_json(alerts)
+    elif args.output == "csv":
+        output_csv(alerts)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,94 @@
+Jan 15 09:58:12 web01.internal sshd[8801]: Accepted password for deploy from 192.168.1.5 port 51200 ssh2
+Jan 15 09:59:44 web01.internal sshd[8812]: Invalid user admin from 91.108.4.1 port 43210
+Jan 15 10:00:00 web01.internal sshd[8900]: Failed password for root from 203.0.113.50 port 41001 ssh2
+Jan 15 10:00:03 web01.internal sshd[8901]: Failed password for root from 203.0.113.50 port 41002 ssh2
+Jan 15 10:00:06 web01.internal sshd[8902]: Failed password for root from 203.0.113.50 port 41003 ssh2
+Jan 15 10:00:09 web01.internal sshd[8903]: Failed password for root from 203.0.113.50 port 41004 ssh2
+Jan 15 10:00:12 web01.internal sshd[8904]: Failed password for root from 203.0.113.50 port 41005 ssh2
+Jan 15 10:00:15 web01.internal sshd[8905]: Failed password for root from 203.0.113.50 port 41006 ssh2
+Jan 15 10:00:18 web01.internal sshd[8906]: Failed password for invalid user admin from 203.0.113.50 port 41007 ssh2
+Jan 15 10:00:21 web01.internal sshd[8907]: Failed password for root from 203.0.113.50 port 41008 ssh2
+Jan 15 10:00:24 web01.internal sshd[8908]: Failed password for root from 203.0.113.50 port 41009 ssh2
+Jan 15 10:00:27 web01.internal sshd[8909]: Failed password for root from 203.0.113.50 port 41010 ssh2
+Jan 15 10:00:30 web01.internal sshd[8910]: Failed password for root from 203.0.113.50 port 41011 ssh2
+Jan 15 10:00:33 web01.internal sshd[8911]: Failed password for root from 203.0.113.50 port 41012 ssh2
+Jan 15 10:00:36 web01.internal sshd[8912]: Failed password for root from 203.0.113.50 port 41013 ssh2
+Jan 15 10:00:39 web01.internal sshd[8913]: Failed password for invalid user ubuntu from 203.0.113.50 port 41014 ssh2
+Jan 15 10:00:42 web01.internal sshd[8914]: Failed password for root from 203.0.113.50 port 41015 ssh2
+Jan 15 10:00:45 web01.internal sshd[8915]: Failed password for root from 203.0.113.50 port 41016 ssh2
+Jan 15 10:00:48 web01.internal sshd[8916]: Failed password for root from 203.0.113.50 port 41017 ssh2
+Jan 15 10:00:51 web01.internal sshd[8917]: Failed password for root from 203.0.113.50 port 41018 ssh2
+Jan 15 10:00:54 web01.internal sshd[8918]: Failed password for root from 203.0.113.50 port 41019 ssh2
+Jan 15 10:00:57 web01.internal sshd[8919]: Failed password for root from 203.0.113.50 port 41020 ssh2
+Jan 15 10:01:00 web01.internal sshd[8920]: Failed password for root from 203.0.113.50 port 41021 ssh2
+Jan 15 10:01:03 web01.internal sshd[8921]: Failed password for invalid user ec2-user from 203.0.113.50 port 41022 ssh2
+Jan 15 10:01:06 web01.internal sshd[8922]: Failed password for root from 203.0.113.50 port 41023 ssh2
+Jan 15 10:01:09 web01.internal sshd[8923]: Failed password for root from 203.0.113.50 port 41024 ssh2
+Jan 15 10:01:12 web01.internal sshd[8924]: Failed password for root from 203.0.113.50 port 41025 ssh2
+Jan 15 10:01:15 web01.internal sshd[8925]: Failed password for root from 203.0.113.50 port 41026 ssh2
+Jan 15 10:01:18 web01.internal sshd[8926]: Failed password for root from 203.0.113.50 port 41027 ssh2
+Jan 15 10:01:21 web01.internal sshd[8927]: Failed password for root from 203.0.113.50 port 41028 ssh2
+Jan 15 10:01:24 web01.internal sshd[8928]: Failed password for root from 203.0.113.50 port 41029 ssh2
+Jan 15 10:01:27 web01.internal sshd[8929]: Failed password for root from 203.0.113.50 port 41030 ssh2
+Jan 15 10:01:30 web01.internal sshd[8930]: Failed password for root from 203.0.113.50 port 41031 ssh2
+Jan 15 10:01:33 web01.internal sshd[8931]: Failed password for root from 203.0.113.50 port 41032 ssh2
+Jan 15 10:01:36 web01.internal sshd[8932]: Failed password for root from 203.0.113.50 port 41033 ssh2
+Jan 15 10:01:39 web01.internal sshd[8933]: Failed password for root from 203.0.113.50 port 41034 ssh2
+Jan 15 10:01:42 web01.internal sshd[8934]: Failed password for root from 203.0.113.50 port 41035 ssh2
+Jan 15 10:01:45 web01.internal sshd[8935]: Failed password for root from 203.0.113.50 port 41036 ssh2
+Jan 15 10:01:48 web01.internal sshd[8936]: Failed password for root from 203.0.113.50 port 41037 ssh2
+Jan 15 10:01:51 web01.internal sshd[8937]: Failed password for root from 203.0.113.50 port 41038 ssh2
+Jan 15 10:01:54 web01.internal sshd[8938]: Failed password for root from 203.0.113.50 port 41039 ssh2
+Jan 15 10:01:57 web01.internal sshd[8939]: Failed password for root from 203.0.113.50 port 41040 ssh2
+Jan 15 10:02:00 web01.internal sshd[8940]: Failed password for root from 203.0.113.50 port 41041 ssh2
+Jan 15 10:02:03 web01.internal sshd[8941]: Failed password for root from 203.0.113.50 port 41042 ssh2
+Jan 15 10:02:06 web01.internal sshd[8942]: Failed password for root from 203.0.113.50 port 41043 ssh2
+Jan 15 10:02:09 web01.internal sshd[8943]: Failed password for root from 203.0.113.50 port 41044 ssh2
+Jan 15 10:02:12 web01.internal sshd[8944]: Failed password for root from 203.0.113.50 port 41045 ssh2
+Jan 15 10:02:15 web01.internal sshd[8945]: Failed password for root from 203.0.113.50 port 41046 ssh2
+Jan 15 10:02:18 web01.internal sshd[8946]: Failed password for root from 203.0.113.50 port 41047 ssh2
+Jan 15 10:02:21 web01.internal sshd[8947]: Failed password for root from 203.0.113.50 port 41048 ssh2
+Jan 15 10:02:24 web01.internal sshd[8948]: Failed password for root from 203.0.113.50 port 41049 ssh2
+Jan 15 10:02:27 web01.internal sshd[8949]: Failed password for root from 203.0.113.50 port 41050 ssh2
+Jan 15 10:02:30 web01.internal sshd[8950]: Failed password for root from 203.0.113.50 port 41051 ssh2
+Jan 15 10:02:33 web01.internal sshd[8951]: Failed password for root from 203.0.113.50 port 41052 ssh2
+Jan 15 10:02:36 web01.internal sshd[8952]: Failed password for root from 203.0.113.50 port 41053 ssh2
+Jan 15 10:02:39 web01.internal sshd[8953]: Failed password for root from 203.0.113.50 port 41054 ssh2
+Jan 15 10:02:42 web01.internal sshd[8954]: Failed password for root from 203.0.113.50 port 41055 ssh2
+Jan 15 10:02:45 web01.internal sshd[8955]: Failed password for root from 203.0.113.50 port 41056 ssh2
+Jan 15 10:02:48 web01.internal sshd[8956]: Failed password for root from 203.0.113.50 port 41057 ssh2
+Jan 15 10:02:51 web01.internal sshd[8957]: Failed password for root from 203.0.113.50 port 41058 ssh2
+Jan 15 10:02:54 web01.internal sshd[8958]: Failed password for root from 203.0.113.50 port 41059 ssh2
+Jan 15 10:02:57 web01.internal sshd[8959]: Failed password for root from 203.0.113.50 port 41060 ssh2
+Jan 15 10:03:00 web01.internal sshd[8960]: Failed password for root from 203.0.113.50 port 41061 ssh2
+Jan 15 10:03:03 web01.internal sshd[8961]: Failed password for root from 203.0.113.50 port 41062 ssh2
+Jan 15 10:03:06 web01.internal sshd[8962]: Failed password for root from 203.0.113.50 port 41063 ssh2
+Jan 15 10:03:09 web01.internal sshd[8963]: Failed password for root from 203.0.113.50 port 41064 ssh2
+Jan 15 10:03:12 web01.internal sshd[8964]: Failed password for root from 203.0.113.50 port 41065 ssh2
+Jan 15 10:03:30 web01.internal sshd[8970]: Accepted password for root from 203.0.113.50 port 41066 ssh2
+Jan 15 10:04:55 web01.internal sshd[8980]: Accepted password for alice from 185.220.101.45 port 52100 ssh2
+Jan 15 10:05:00 web01.internal sshd[8981]: Accepted password for alice from 185.220.101.45 port 52101 ssh2
+Jan 15 10:09:14 web01.internal sshd[8990]: Accepted password for alice from 8.8.8.8 port 60201 ssh2
+Jan 15 10:15:00 db01.internal sshd[9100]: Accepted password for bob from 192.168.1.10 port 54300 ssh2
+Jan 15 10:16:00 db01.internal sudo:  bob : TTY=pts/0 ; PWD=/home/bob ; USER=root ; COMMAND=/bin/bash
+Jan 15 10:17:30 db01.internal su[9150]: Successful su for root by alice
+Jan 15 10:20:00 server1.internal sshd[9200]: Accepted password for sysadmin from 192.168.1.100 port 55100 ssh2
+Jan 15 10:21:00 server2.internal sshd[9210]: Accepted password for sysadmin from 192.168.1.100 port 55200 ssh2
+Jan 15 10:22:00 server3.internal sshd[9220]: Accepted password for sysadmin from 192.168.1.100 port 55300 ssh2
+Jan 15 10:23:00 server4.internal sshd[9230]: Accepted password for sysadmin from 192.168.1.100 port 55400 ssh2
+Jan 15 10:24:00 server5.internal sshd[9240]: Accepted password for sysadmin from 192.168.1.100 port 55500 ssh2
+Jan 15 10:25:00 server6.internal sshd[9250]: Accepted password for sysadmin from 192.168.1.100 port 55600 ssh2
+Jan 15 10:30:00 web01.internal sshd[9300]: Failed password for invalid user oracle from 91.108.4.2 port 43999 ssh2
+Jan 15 10:30:05 web01.internal sshd[9301]: Failed password for invalid user postgres from 91.108.4.2 port 44000 ssh2
+Jan 15 10:30:10 web01.internal sshd[9302]: Failed password for invalid user mysql from 91.108.4.2 port 44001 ssh2
+Jan 15 10:30:15 web01.internal sshd[9303]: Failed password for invalid user ftpuser from 91.108.4.2 port 44002 ssh2
+Jan 15 10:30:20 web01.internal sshd[9304]: Failed password for invalid user test from 91.108.4.2 port 44003 ssh2
+Jan 15 10:35:00 web01.internal sshd[9400]: Accepted publickey for deploy from 192.168.1.5 port 51500 ssh2
+Jan 15 10:40:00 web01.internal sshd[9500]: Failed password for root from 195.154.0.1 port 62000 ssh2
+Jan 15 10:40:02 web01.internal sshd[9501]: Failed password for root from 195.154.0.1 port 62001 ssh2
+Jan 15 10:40:04 web01.internal sshd[9502]: Failed password for root from 195.154.0.1 port 62002 ssh2
+Jan 15 10:40:06 web01.internal sshd[9503]: Failed password for root from 195.154.0.1 port 62003 ssh2
+Jan 15 10:40:08 web01.internal sshd[9504]: Failed password for root from 195.154.0.1 port 62004 ssh2
+Jan 15 10:40:10 web01.internal sshd[9505]: Failed password for root from 195.154.0.1 port 62005 ssh2
+Jan 15 10:40:12 web01.internal sshd[9506]: Failed password for root from 195.154.0.1 port 62006 ssh2
+Jan 15 10:40:14 web01.internal sshd[9507]: Failed password for root from 195.154.0.1 port 62007 ssh2
