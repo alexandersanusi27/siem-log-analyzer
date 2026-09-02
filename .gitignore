@@ -1,3 +1,4 @@
 __pycache__/
 *.pyc
 .geoip_cache.json
+siem_report_*.html

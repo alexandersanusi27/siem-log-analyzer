@@ -48,7 +48,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Minimum severity level to display (default: LOW)",
     )
     p.add_argument(
-        "--output", choices=["terminal", "json", "csv"],
+        "--output", choices=["terminal", "json", "csv", "html"],
         default="terminal",
         help="Output format (default: terminal)",
     )
@@ -189,7 +189,7 @@ def main() -> None:
         args.zeek    = ["sample_logs/zeek_conn.log"]
         args.nginx   = ["sample_logs/nginx_access.log"]
 
-    if not (args.ssh or args.windows or args.zeek):
+    if not (args.ssh or args.windows or args.zeek or getattr(args, "nginx", None)):
         parser.print_help()
         print("\n  Tip: run with --demo to try the bundled sample logs.")
         sys.exit(1)
@@ -214,6 +214,11 @@ def main() -> None:
         output_json(alerts)
     elif args.output == "csv":
         output_csv(alerts)
+    elif args.output == "html":
+        from dashboard.html_report import generate_html_report
+        from datetime import datetime
+        filename = f"siem_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+        generate_html_report(alerts, stats, filename)
 
 
 if __name__ == "__main__":
