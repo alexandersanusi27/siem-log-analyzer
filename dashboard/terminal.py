@@ -33,6 +33,9 @@ _TYPE_LABEL: Dict[str, str] = {
     "LATERAL_MOVEMENT":     "Lateral Movement",
     "PRIVILEGE_ESCALATION": "Privilege Escalation",
     "IMPOSSIBLE_TRAVEL":    "Impossible Travel",
+    "OFF_HOURS_LOGIN":      "Off-Hours Login",
+    "CREDENTIAL_STUFFING":  "Credential Stuffing",
+    "DATA_EXFILTRATION":    "Data Exfiltration",
 }
 
 

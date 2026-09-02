@@ -37,7 +37,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--zeek",    nargs="+", metavar="FILE", help="Zeek conn.log file(s)")
     p.add_argument(
         "--detectors", nargs="+",
-        choices=["brute_force", "lateral_movement", "privilege_escalation", "impossible_travel"],
+        choices=["brute_force", "lateral_movement", "privilege_escalation", "impossible_travel",
+                 "off_hours", "credential_stuffing", "data_exfiltration"],
         help="Run only specific detectors (default: all)",
     )
     p.add_argument(
@@ -101,6 +102,9 @@ _DETECTOR_MODULES = {
     "lateral_movement":     "detectors.lateral_movement",
     "privilege_escalation": "detectors.privilege_escalation",
     "impossible_travel":    "detectors.impossible_travel",
+    "off_hours":            "detectors.off_hours",
+    "credential_stuffing":  "detectors.credential_stuffing",
+    "data_exfiltration":    "detectors.data_exfiltration",
 }
 
 
