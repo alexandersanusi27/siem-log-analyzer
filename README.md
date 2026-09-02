@@ -1,120 +1,132 @@
-# SIEM Log Analyzer
+# siem-log-analyzer
 
-A Python-based SIEM (Security Information and Event Management) tool that ingests real-world log formats and detects active threats using rule-based detection logic. Built to demonstrate SOC analyst / security engineering skills.
+Built this as a personal project while studying for my security modules. Wanted to actually understand what SOC work looks like in practice rather than just reading theory, so I decided to build a log analysis tool from scratch.
 
-## What it detects
+The idea is simple — point it at log files, and it tells you what looks suspicious. It parses SSH logs, Windows Event Logs, Zeek network logs and nginx access logs, then runs them through detection rules and gives you a ranked list of alerts.
 
-| Detection | Description | MITRE ATT&CK |
-|---|---|---|
-| **Brute Force** | High-volume failed logins from a single IP, with escalation if a success follows | T1110 |
-| **Lateral Movement** | Single source IP authenticating to many internal hosts; admin-port scanning (Zeek) | T1021, T1046 |
-| **Privilege Escalation** | `sudo`/`su` to root, dangerous Windows privilege assignment (4672), new account creation | T1548, T1134, T1136 |
-| **Impossible Travel** | Same user logging in from geographically distant IPs faster than aircraft speed | T1078 |
+---
 
-## Log formats supported
+## what it detects
 
-- **SSH auth.log** — standard Linux `/var/log/auth.log` (sshd, sudo, su)
-- **Windows Event Log** — JSON export (EventIDs: 4624, 4625, 4672, 4688, 4720, and more)
-- **Zeek conn.log** — tab-separated network connection logs
+| detector | what it does |
+|---|---|
+| **Brute Force** | lots of failed logins from one IP in a short window. if a successful login follows — that's a compromise |
+| **Lateral Movement** | one IP logging into multiple internal servers in a short time, or scanning admin ports (SSH, RDP, SMB) |
+| **Privilege Escalation** | sudo/su to root, sketchy Windows privilege grants (EventID 4672), new accounts being created |
+| **Impossible Travel** | same user logs in from two countries within minutes — physically impossible, likely stolen creds |
+| **Off-Hours Login** | successful logins at 2-5am or weekends, worse if the IP is external |
+| **Credential Stuffing** | loads of different usernames tried from one IP with only 1-2 attempts each. stays under the brute force radar on purpose |
+| **Data Exfiltration** | unusually large outbound transfers to external IPs picked up from Zeek logs |
+| **Web Attacks** | SQLi payloads, XSS attempts, path traversal, known scanner tools (sqlmap, nikto, dirbuster), directory brute forcing |
 
-## Output formats
+Something that surprised me — credential stuffing and brute force look completely different in logs. Brute force is obvious and noisy (same username, 100s of attempts). Stuffing is quiet and easy to miss (50 different usernames, tried once each). Had to write separate logic for both.
 
-- **Terminal** — colour-coded ranked alert dashboard with detail panels (default)
-- **JSON** — machine-readable, for piping into other tools
-- **CSV** — for importing into spreadsheets or SIEMs
+---
 
-## Quick start
+## supported log formats
+
+- Linux SSH `auth.log` (sshd failed/accepted, sudo, su)
+- Windows Event Log exported as JSON (4624, 4625, 4672, 4720 etc.)
+- Zeek `conn.log` — network flow data
+- nginx / Apache combined access log
+
+---
+
+## how to run it
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/siem-log-analyzer
-cd siem-log-analyzer
 pip install -r requirements.txt
 
-# Run on bundled sample logs (triggers all 4 detectors)
+# easiest way to try it — uses the included sample logs
 python main.py --demo
 
-# Run on your own logs
+# point at your own logs
 python main.py --ssh /var/log/auth.log
-python main.py --windows events.json --zeek conn.log
-python main.py --ssh auth.log --min-severity HIGH
-python main.py --ssh auth.log --output json > alerts.json
-python main.py --ssh auth.log --output csv > alerts.csv
+python main.py --ssh auth.log --windows events.json --zeek conn.log --nginx access.log
 
-# Run only specific detectors
-python main.py --ssh auth.log --detectors brute_force impossible_travel
+# only show high severity stuff
+python main.py --ssh auth.log --min-severity HIGH
+
+# different output formats
+python main.py --demo --output json > alerts.json
+python main.py --demo --output csv > alerts.csv
+python main.py --demo --output html    # generates a dark mode HTML report file
+
+# live mode — watches a log file and prints alerts as new lines come in
+python main.py --ssh /var/log/auth.log --watch
+
+# run specific detectors only
+python main.py --ssh auth.log --detectors brute_force credential_stuffing impossible_travel
 ```
 
-## Sample output (--demo)
+---
+
+## demo
+
+Running `python main.py --demo` on the sample logs I put together:
 
 ```
 Loading logs...
-  [ssh]        94 events  <- sample_logs/auth.log
+  [ssh]       111 events  <- sample_logs/auth.log
   [windows]    37 events  <- sample_logs/windows_events.json
-  [zeek]       24 events  <- sample_logs/zeek_conn.log
-  Total events loaded: 155
+  [zeek]       27 events  <- sample_logs/zeek_conn.log
+  [nginx]      46 events  <- sample_logs/nginx_access.log
+  Total events loaded: 221
 
 Running detectors...
-  [Brute Force] 5 alert(s)
+  [Brute Force] 6 alert(s)
   [Lateral Movement] 2 alert(s)
   [Privilege Escalation] 4 alert(s)
   [Impossible Travel] 1 alert(s)
-  Alerts after severity filter (>= LOW): 12
+  [Off Hours] 3 alert(s)
+  [Credential Stuffing] 1 alert(s)
+  [Data Exfiltration] 1 alert(s)
+  [Web Attacks] 6 alert(s)
+  Alerts after severity filter (>= LOW): 24
 
-  SIEM LOG ANALYZER | Alert Dashboard
-
-  Summary
-  -------
-  Alerts found:    12
-  Breakdown:       CRITICAL: 4  HIGH: 4  MEDIUM: 4
-  Events parsed:   SSH: 94  WINDOWS: 37  ZEEK: 24 (total 155)
-
-  Ranked Alerts
-  #  Severity  Type                   Score  Source IPs       Users     Events  Title
-  1  CRITICAL  Brute Force            100    203.0.113.50     root      65      Brute Force: 203.0.113.50
-  2  CRITICAL  Impossible Travel      100    185.220.101.45   alice     2       Impossible Travel: alice
-  3  CRITICAL  Brute Force             90    203.0.113.51     admin     22      Brute Force: 203.0.113.51
-  4  CRITICAL  Lateral Movement        80    192.168.1.100    sysadmin  6       Lateral Movement (Auth): 192.168.1.100
-  ...
+  CRITICAL: 4  |  HIGH: 8  |  MEDIUM: 6  |  LOW: 6
 ```
 
-## Project structure
+The sample logs are crafted to hit every detector — a brute force that ends with a successful login (compromise), the same user logging in from Germany and California 4 minutes apart, 350MB sent to an IP in Beijing, SQLi via sqlmap etc.
 
-```
-siem-log-analyzer/
-├── main.py                     # CLI entry point
-├── models.py                   # LogEvent and Alert dataclasses
-├── parsers/
-│   ├── ssh.py                  # auth.log parser
-│   ├── windows.py              # Windows Event Log JSON parser
-│   └── zeek.py                 # Zeek conn.log parser
-├── detectors/
-│   ├── brute_force.py
-│   ├── lateral_movement.py
-│   ├── privilege_escalation.py
-│   └── impossible_travel.py
-├── dashboard/
-│   └── terminal.py             # Rich terminal UI
-├── utils/
-│   └── geoip.py                # IP geolocation (offline table + ip-api.com)
-└── sample_logs/
-    ├── auth.log                 # Synthetic SSH log (triggers all detectors)
-    ├── windows_events.json      # Windows Event Log sample
-    └── zeek_conn.log            # Zeek network log sample
+---
+
+## tests
+
+```bash
+pytest tests/ -v
 ```
 
-## Requirements
+49 tests, all passing. Covers the parsers and all 8 detectors including edge cases like events that fall outside the detection window, private IPs being ignored by the geo lookup, and making sure brute force isn't misclassified as credential stuffing.
+
+---
+
+## project layout
+
+```
+├── main.py
+├── models.py              # LogEvent and Alert dataclasses
+├── parsers/               # one file per log format
+├── detectors/             # one file per detection rule
+├── dashboard/             # terminal output + HTML report
+├── utils/geoip.py         # IP lookup + haversine distance for impossible travel
+├── sample_logs/           # test logs that trigger all 8 detectors
+└── tests/
+```
+
+Adding a new parser = one file in `parsers/` with a `parse_X_log(filepath)` function.
+Adding a detector = one file in `detectors/` with a `detect(events)` function, gets picked up automatically.
+
+---
+
+## dependencies
 
 - Python 3.9+
-- [`rich`](https://github.com/Textualize/rich) (terminal rendering)
+- `rich` for the terminal UI
+- `pytest` for tests
 
-GeoIP lookups for impossible travel use the built-in IP table (covers all sample logs, no API key needed). For real-world IPs, the tool queries [ip-api.com](http://ip-api.com) and caches results locally.
+GeoIP uses a hardcoded table for the sample logs (offline, no key needed). For real IPs it calls ip-api.com and caches the results so it doesn't spam the API.
 
-## Extending
-
-**Add a new log format:** create `parsers/myformat.py` with a `parse_myformat_log(filepath) -> List[LogEvent]` function and hook it into `main.py`.
-
-**Add a new detector:** create `detectors/mydetector.py` with a `detect(events: List[LogEvent]) -> List[Alert]` function. It is automatically available via `--detectors mydetector`.
-
-## License
+---
 
 MIT
