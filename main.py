@@ -14,6 +14,7 @@ Usage:
 """
 import argparse
 import json
+import os
 import sys
 from dataclasses import asdict
 from typing import List
@@ -55,6 +56,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument(
         "--demo", action="store_true",
         help="Run analysis on the bundled sample log files",
+    )
+    p.add_argument(
+        "--watch", action="store_true",
+        help="Tail log file(s) and alert on new events in real time (polls every 5s)",
+    )
+    p.add_argument(
+        "--watch-interval", type=int, default=5, metavar="SECONDS",
+        help="Polling interval for --watch mode (default: 5)",
     )
     return p
 
@@ -176,6 +185,94 @@ def output_csv(alerts: List[Alert]) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Watch mode — tail log files and alert on new events in real time
+# ---------------------------------------------------------------------------
+
+def _watch_mode(args, detectors: List[str]) -> None:
+    import time
+
+    # Collect (parser_fn, filepath) pairs and track file positions
+    sources = []
+    if args.ssh:
+        from parsers.ssh import parse_ssh_log
+        for p in args.ssh:
+            sources.append(("ssh", p, parse_ssh_log))
+    if getattr(args, "nginx", None):
+        from parsers.nginx import parse_nginx_log
+        for p in args.nginx:
+            sources.append(("nginx", p, parse_nginx_log))
+
+    if not sources:
+        print("[!] --watch currently supports --ssh and --nginx log files.")
+        return
+
+    # Record initial file sizes so we only process new lines
+    file_positions = {}
+    for _, path, _ in sources:
+        try:
+            file_positions[path] = os.path.getsize(path)
+        except OSError:
+            file_positions[path] = 0
+
+    min_sev = SEVERITY_ORDER.get(args.min_severity, 0)
+    interval = args.watch_interval
+
+    print(f"\n[watch] Monitoring {len(sources)} file(s). Polling every {interval}s. Ctrl+C to stop.\n")
+
+    seen_alert_keys: set = set()
+
+    while True:
+        time.sleep(interval)
+        new_events = []
+
+        for fmt, path, parse_fn in sources:
+            try:
+                current_size = os.path.getsize(path)
+            except OSError:
+                continue
+
+            prev_pos = file_positions.get(path, 0)
+            if current_size <= prev_pos:
+                continue
+
+            # Read only the new portion of the file
+            with open(path, "r", errors="replace") as fh:
+                fh.seek(prev_pos)
+                new_lines = fh.read()
+            file_positions[path] = current_size
+
+            # Write new lines to a temp file and parse it
+            import tempfile
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix=f".{fmt}.log", delete=False, errors="replace"
+            ) as tmp:
+                tmp.write(new_lines)
+                tmp_path = tmp.name
+
+            try:
+                evts = parse_fn(tmp_path)
+                new_events.extend(evts)
+            finally:
+                os.unlink(tmp_path)
+
+        if not new_events:
+            continue
+
+        alerts = run_detectors(new_events, detectors)
+        alerts = [a for a in alerts if SEVERITY_ORDER.get(a.severity, 0) >= min_sev]
+
+        for alert in alerts:
+            # Deduplicate against previously seen alerts
+            key = (alert.alert_type, tuple(alert.involved_ips), tuple(alert.involved_users))
+            if key in seen_alert_keys:
+                continue
+            seen_alert_keys.add(key)
+
+            from dashboard.terminal import _render_detail_panel
+            _render_detail_panel(len(seen_alert_keys), alert)
+
+
+# ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 
@@ -195,6 +292,10 @@ def main() -> None:
         sys.exit(1)
 
     detectors = args.detectors or list(_DETECTOR_MODULES.keys())
+
+    if args.watch:
+        _watch_mode(args, detectors)
+        return
 
     print("\nLoading logs...")
     events, stats = load_events(args)
