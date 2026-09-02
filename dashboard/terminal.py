@@ -36,6 +36,7 @@ _TYPE_LABEL: Dict[str, str] = {
     "OFF_HOURS_LOGIN":      "Off-Hours Login",
     "CREDENTIAL_STUFFING":  "Credential Stuffing",
     "DATA_EXFILTRATION":    "Data Exfiltration",
+    "WEB_ATTACK":           "Web Attack",
 }
 
 

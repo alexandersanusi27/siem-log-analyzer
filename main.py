@@ -35,10 +35,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--ssh",     nargs="+", metavar="FILE", help="SSH auth.log file(s)")
     p.add_argument("--windows", nargs="+", metavar="FILE", help="Windows Event Log JSON file(s)")
     p.add_argument("--zeek",    nargs="+", metavar="FILE", help="Zeek conn.log file(s)")
+    p.add_argument("--nginx",   nargs="+", metavar="FILE", help="nginx/Apache access log file(s)")
     p.add_argument(
         "--detectors", nargs="+",
         choices=["brute_force", "lateral_movement", "privilege_escalation", "impossible_travel",
-                 "off_hours", "credential_stuffing", "data_exfiltration"],
+                 "off_hours", "credential_stuffing", "data_exfiltration", "web_attacks"],
         help="Run only specific detectors (default: all)",
     )
     p.add_argument(
@@ -90,6 +91,14 @@ def load_events(args):
             stats["zeek"] = stats.get("zeek", 0) + len(evts)
             print(f"  [zeek]    {len(evts):>5} events  <- {path}")
 
+    if getattr(args, "nginx", None):
+        from parsers.nginx import parse_nginx_log
+        for path in args.nginx:
+            evts = parse_nginx_log(path)
+            events.extend(evts)
+            stats["nginx"] = stats.get("nginx", 0) + len(evts)
+            print(f"  [nginx]   {len(evts):>5} events  <- {path}")
+
     return events, stats
 
 
@@ -105,6 +114,7 @@ _DETECTOR_MODULES = {
     "off_hours":            "detectors.off_hours",
     "credential_stuffing":  "detectors.credential_stuffing",
     "data_exfiltration":    "detectors.data_exfiltration",
+    "web_attacks":          "detectors.web_attacks",
 }
 
 
@@ -177,6 +187,7 @@ def main() -> None:
         args.ssh     = ["sample_logs/auth.log"]
         args.windows = ["sample_logs/windows_events.json"]
         args.zeek    = ["sample_logs/zeek_conn.log"]
+        args.nginx   = ["sample_logs/nginx_access.log"]
 
     if not (args.ssh or args.windows or args.zeek):
         parser.print_help()
