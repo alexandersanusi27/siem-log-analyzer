@@ -304,6 +304,16 @@ def main() -> None:
     print("Running detectors...")
     alerts = run_detectors(events, detectors)
 
+    print("Running threat intel enrichment...")
+    from utils.threat_intel import enrich_alerts
+    enrich_alerts(alerts)
+
+    # Re-sort after enrichment (scores and severities may have changed)
+    alerts.sort(
+        key=lambda a: (SEVERITY_ORDER.get(a.severity, 0), a.score),
+        reverse=True,
+    )
+
     # Filter by minimum severity
     min_sev = SEVERITY_ORDER.get(args.min_severity, 0)
     alerts  = [a for a in alerts if SEVERITY_ORDER.get(a.severity, 0) >= min_sev]

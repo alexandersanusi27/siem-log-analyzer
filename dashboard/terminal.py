@@ -83,6 +83,11 @@ def _render_summary(alerts: List[Alert], log_stats: Dict[str, int]) -> None:
     t.add_column("k", style="bold dim")
     t.add_column("v")
 
+    ti_ips = set()
+    for a in alerts:
+        for hit in a.details.get("threat_intel", []):
+            ti_ips.add(hit["ip"])
+
     t.add_row("Alerts found", str(len(alerts)))
     t.add_row(
         "Breakdown",
@@ -92,6 +97,12 @@ def _render_summary(alerts: List[Alert], log_stats: Dict[str, int]) -> None:
             if c > 0
         ) or "[dim]none[/dim]",
     )
+    if ti_ips:
+        t.add_row(
+            "Threat intel hits",
+            f"[bold red]{len(ti_ips)} known-malicious IP(s)[/bold red]  "
+            + ", ".join(sorted(ti_ips)),
+        )
     t.add_row(
         "Events parsed",
         "  ".join(f"{src.upper()}: {n:,}" for src, n in log_stats.items())
@@ -153,6 +164,18 @@ def _render_detail_panel(rank: int, alert: Alert) -> None:
     lines: List[str] = [alert.description, ""]
 
     for k, v in alert.details.items():
+        if k == "threat_intel":
+            lines.append("")
+            lines.append("  [bold red]THREAT INTEL MATCHES[/bold red]")
+            for hit in v:
+                lines.append(
+                    f"  [red]  {hit['ip']}[/red]"
+                    f"  [dim]confidence:[/dim] [bold]{hit['confidence']}%[/bold]"
+                    f"  [dim]categories:[/dim] {hit['categories']}"
+                    f"  [dim]reports:[/dim] {hit['reports']}"
+                    f"  [dim]source:[/dim] {hit['source']}"
+                )
+            continue
         label = k.replace("_", " ").title()
         if isinstance(v, list):
             val = ", ".join(str(x) for x in v[:8])

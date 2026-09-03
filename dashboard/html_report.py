@@ -83,10 +83,17 @@ def generate_html_report(alerts: List[Alert], log_stats: Dict[str, int], output_
     ]
 
     # Summary cards
+    ti_ip_count = len({
+        hit["ip"]
+        for a in alerts
+        for hit in a.details.get("threat_intel", [])
+    })
     body_parts.append("<div class='summary'>")
     body_parts.append(_stat_card(str(len(alerts)), "Total Alerts", "#58a6ff"))
     for sev, colour in _SEVERITY_COLOUR.items():
         body_parts.append(_stat_card(str(counts[sev]), sev, colour))
+    if ti_ip_count:
+        body_parts.append(_stat_card(str(ti_ip_count), "Known-Bad IPs", "#c0392b"))
     body_parts.append("</div>")
 
     # Alert table
@@ -132,6 +139,26 @@ def generate_html_report(alerts: List[Alert], log_stats: Dict[str, int], output_
         body_parts.append(f"<p style='margin-bottom:14px'>{html.escape(a.description)}</p>")
 
         for k, v in a.details.items():
+            if k == "threat_intel":
+                body_parts.append(
+                    "<div style='margin:12px 0 8px;padding:10px 14px;"
+                    "background:#2d1515;border:1px solid #c0392b;border-radius:6px'>"
+                    "<div style='color:#c0392b;font-weight:bold;margin-bottom:8px'>"
+                    "THREAT INTEL MATCHES</div>"
+                )
+                for hit in v:
+                    cats = html.escape(hit["categories"])
+                    body_parts.append(
+                        f"<div style='margin-bottom:6px;font-size:0.85rem'>"
+                        f"<span style='color:#e74c3c;font-weight:bold'>{html.escape(hit['ip'])}</span>"
+                        f" &nbsp; Confidence: <b>{hit['confidence']}%</b>"
+                        f" &nbsp; Categories: {cats}"
+                        f" &nbsp; Reports: {hit['reports']}"
+                        f" &nbsp; <span style='color:#8b949e'>({html.escape(hit['source'])})</span>"
+                        f"</div>"
+                    )
+                body_parts.append("</div>")
+                continue
             label = k.replace("_", " ").title()
             if isinstance(v, list):
                 val = ", ".join(str(x) for x in v[:8]) + (f" … (+{len(v)-8} more)" if len(v) > 8 else "")
