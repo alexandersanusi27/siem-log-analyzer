@@ -19,6 +19,8 @@ The idea is simple — point it at log files, and it tells you what looks suspic
 | **Data Exfiltration** | unusually large outbound transfers to external IPs picked up from Zeek logs |
 | **Web Attacks** | SQLi payloads, XSS attempts, path traversal, known scanner tools (sqlmap, nikto, dirbuster), directory brute forcing |
 
+Each alert is tagged with its **MITRE ATT&CK technique ID** (T1110, T1548.003, T1021 etc.) and the HTML report generates a full coverage matrix showing which techniques were detected in the run.
+
 Something that surprised me — credential stuffing and brute force look completely different in logs. Brute force is obvious and noisy (same username, 100s of attempts). Stuffing is quiet and easy to miss (50 different usernames, tried once each). Had to write separate logic for both.
 
 ---
@@ -97,7 +99,7 @@ The sample logs are crafted to hit every detector — a brute force that ends wi
 pytest tests/ -v
 ```
 
-49 tests, all passing. Covers the parsers and all 8 detectors including edge cases like events that fall outside the detection window, private IPs being ignored by the geo lookup, and making sure brute force isn't misclassified as credential stuffing.
+62 tests, all passing. Covers the parsers, all 8 detectors, and threat intel enrichment — including edge cases like events that fall outside the detection window, private IPs being ignored by the geo lookup, and making sure brute force isn't misclassified as credential stuffing.
 
 ---
 
@@ -110,6 +112,7 @@ pytest tests/ -v
 ├── detectors/             # one file per detection rule
 ├── dashboard/             # terminal output + HTML report
 ├── utils/geoip.py         # IP lookup + haversine distance for impossible travel
+├── utils/threat_intel.py  # built-in blocklist + optional AbuseIPDB live lookup
 ├── sample_logs/           # test logs that trigger all 8 detectors
 └── tests/
 ```
@@ -126,6 +129,8 @@ Adding a detector = one file in `detectors/` with a `detect(events)` function, g
 - `pytest` for tests
 
 GeoIP uses a hardcoded table for the sample logs (offline, no key needed). For real IPs it calls ip-api.com and caches the results so it doesn't spam the API.
+
+Threat intel runs against a built-in blocklist of real Tor exit nodes, port scanners and C2 servers. Set `ABUSEIPDB_KEY=your_key` to enable live AbuseIPDB lookups with 24-hour caching.
 
 ---
 
