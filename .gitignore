@@ -2,3 +2,4 @@ __pycache__/
 *.pyc
 .geoip_cache.json
 siem_report_*.html
+.threat_intel_cache.json

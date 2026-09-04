@@ -52,6 +52,13 @@ tr:hover td { background: #1c2128; }
 .kv .v { color: #c9d1d9; }
 .mitre { margin-top: 12px; font-size: 0.8rem; color: #8b949e; font-style: italic; }
 footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #30363d; font-size: 0.8rem; color: #8b949e; text-align: center; }
+.matrix { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 32px; }
+.tactic { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 14px; min-width: 160px; flex: 1; }
+.tactic-name { font-size: 0.75rem; font-weight: bold; color: #8b949e; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+.technique { font-size: 0.78rem; padding: 5px 8px; border-radius: 4px; margin-bottom: 6px; }
+.technique.hit { background: #1a3a1a; border: 1px solid #27ae60; color: #3dd68c; font-weight: bold; }
+.technique.miss { background: #161b22; border: 1px solid #21262d; color: #484f58; }
+.technique .tid { font-size: 0.7rem; opacity: 0.7; display: block; }
 """
 
 _JS = """
@@ -61,6 +68,75 @@ document.querySelectorAll('.detail-header').forEach(h => {
     });
 });
 """
+
+
+# ---------------------------------------------------------------------------
+# MITRE ATT&CK coverage matrix
+# Tactics and techniques this tool is capable of detecting.
+# ---------------------------------------------------------------------------
+_MITRE_MATRIX = [
+    ("Initial Access", [
+        ("T1190", "Exploit Public-Facing App"),
+    ]),
+    ("Execution", [
+        ("T1059.007", "JavaScript / XSS"),
+    ]),
+    ("Persistence", [
+        ("T1136", "Create Account"),
+        ("T1078", "Valid Accounts"),
+    ]),
+    ("Privilege Escalation", [
+        ("T1548.003", "Sudo / Sudo Caching"),
+        ("T1134", "Access Token Manipulation"),
+        ("T1078", "Valid Accounts"),
+    ]),
+    ("Defense Evasion", [
+        ("T1078", "Valid Accounts"),
+    ]),
+    ("Credential Access", [
+        ("T1110", "Brute Force"),
+        ("T1110.003", "Password Spraying"),
+        ("T1110.004", "Credential Stuffing"),
+    ]),
+    ("Discovery", [
+        ("T1046", "Network Service Discovery"),
+        ("T1083", "File & Directory Discovery"),
+        ("T1595.002", "Vulnerability Scanning"),
+        ("T1595.003", "Wordlist Scanning"),
+    ]),
+    ("Lateral Movement", [
+        ("T1021", "Remote Services"),
+    ]),
+    ("Exfiltration", [
+        ("T1048", "Exfiltration Over Alt Protocol"),
+    ]),
+]
+
+
+def _build_mitre_matrix(alerts: List[Alert]) -> str:
+    # Collect all technique IDs that fired
+    triggered: set = set()
+    for a in alerts:
+        if a.mitre_technique:
+            for part in a.mitre_technique.split("/"):
+                tid = part.strip().split(" - ")[0].strip()
+                triggered.add(tid)
+
+    parts = ["<div class='matrix'>"]
+    for tactic, techniques in _MITRE_MATRIX:
+        parts.append(f"<div class='tactic'><div class='tactic-name'>{html.escape(tactic)}</div>")
+        for tid, name in techniques:
+            hit = tid in triggered
+            cls = "technique hit" if hit else "technique miss"
+            parts.append(
+                f"<div class='{cls}'>"
+                f"{html.escape(name)}"
+                f"<span class='tid'>{html.escape(tid)}</span>"
+                f"</div>"
+            )
+        parts.append("</div>")
+    parts.append("</div>")
+    return "\n".join(parts)
 
 
 def generate_html_report(alerts: List[Alert], log_stats: Dict[str, int], output_path: str) -> None:
@@ -95,6 +171,10 @@ def generate_html_report(alerts: List[Alert], log_stats: Dict[str, int], output_
     if ti_ip_count:
         body_parts.append(_stat_card(str(ti_ip_count), "Known-Bad IPs", "#c0392b"))
     body_parts.append("</div>")
+
+    # MITRE ATT&CK coverage matrix
+    body_parts.append("<h2>MITRE ATT&CK Coverage</h2>")
+    body_parts.append(_build_mitre_matrix(alerts))
 
     # Alert table
     body_parts.append("<h2>Ranked Alerts</h2>")
