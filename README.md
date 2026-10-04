@@ -2,7 +2,7 @@
 
 Built this as a personal project while studying for my security modules. Wanted to actually understand what SOC work looks like in practice rather than just reading theory, so I decided to build a log analysis tool from scratch.
 
-The idea is simple — point it at log files, and it tells you what looks suspicious. It parses SSH logs, Windows Event Logs, Zeek network logs and nginx access logs, then runs them through detection rules and gives you a ranked list of alerts.
+The idea is simple point it at log files, and it tells you what looks suspicious. It parses SSH logs, Windows Event Logs, Zeek network logs and nginx access logs, then runs them through detection rules and gives you a ranked list of alerts.
 
 ---
 
