@@ -21,7 +21,7 @@ The idea is simple point it at log files, and it tells you what looks suspicious
 
 Each alert is tagged with its **MITRE ATT&CK technique ID** (T1110, T1548.003, T1021 etc.) and the HTML report generates a full coverage matrix showing which techniques were detected in the run.
 
-Something that surprised me — credential stuffing and brute force look completely different in logs. Brute force is obvious and noisy (same username, 100s of attempts). Stuffing is quiet and easy to miss (50 different usernames, tried once each). Had to write separate logic for both.
+Something that surprised me credential stuffing and brute force look completely different in logs. Brute force is obvious and noisy (same username, 100s of attempts). Stuffing is quiet and easy to miss (50 different usernames, tried once each). Had to write separate logic for both.
 
 ---
 
@@ -29,7 +29,7 @@ Something that surprised me — credential stuffing and brute force look complet
 
 - Linux SSH `auth.log` (sshd failed/accepted, sudo, su)
 - Windows Event Log exported as JSON (4624, 4625, 4672, 4720 etc.)
-- Zeek `conn.log` — network flow data
+- Zeek `conn.log` network flow data
 - nginx / Apache combined access log
 
 ---
@@ -39,7 +39,7 @@ Something that surprised me — credential stuffing and brute force look complet
 ```bash
 pip install -r requirements.txt
 
-# easiest way to try it — uses the included sample logs
+# easiest way to try it uses the included sample logs
 python main.py --demo
 
 # point at your own logs
@@ -89,7 +89,7 @@ Running detectors...
   CRITICAL: 4  |  HIGH: 8  |  MEDIUM: 6  |  LOW: 6
 ```
 
-The sample logs are crafted to hit every detector — a brute force that ends with a successful login (compromise), the same user logging in from Germany and California 4 minutes apart, 350MB sent to an IP in Beijing, SQLi via sqlmap etc.
+The sample logs are crafted to hit every detector a brute force that ends with a successful login (compromise), the same user logging in from Germany and California 4 minutes apart, 350MB sent to an IP in Beijing, SQLi via sqlmap etc.
 
 ---
 
